@@ -148,18 +148,18 @@ def read_and_validate_excel(input_path: str | Path) -> list[dict]:
 
 
 
-if __name__ == "__main__":
-    test_file = "input/задолженность.xlsx"
+# if __name__ == "__main__":
+#     test_file = "input/задолженность.xlsx"
 
-    try:
-        records = read_and_validate_excel(test_file)
+#     try:
+#         records = read_and_validate_excel(test_file)
 
-        print("Проверка пройдена успешно.")
-        print(f"Количество строк: {len(records)}")
-        print("Первые 3 записи:")
+#         print("Проверка пройдена успешно.")
+#         print(f"Количество строк: {len(records)}")
+#         print("Первые 3 записи:")
 
-        for record in records[:3]:
-            print(record)
+#         for record in records[:3]:
+#             print(record)
 
-    except (FileNotFoundError, ValueError) as error:
-        print(f"Ошибка проверки: {error}")
+#     except (FileNotFoundError, ValueError) as error:
+#         print(f"Ошибка проверки: {error}")

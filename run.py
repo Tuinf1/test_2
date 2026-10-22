@@ -1,7 +1,7 @@
 # run.py
 from pathlib import Path
 
-from функции.reader import read_and_validate_excel
+from функции.чтение_1 import read_and_validate_excel
 from функции.matcher import match_offsets
 from функции.exporter import export_result_excel
 
