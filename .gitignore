@@ -1,0 +1,11 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.idea/
+.vscode/
+.pytest_cache/
+rule.md
+задание.md
+структура.md
