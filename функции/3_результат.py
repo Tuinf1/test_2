@@ -2,6 +2,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from openpyxl import load_workbook
+from openpyxl.styles import Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 
@@ -20,6 +21,22 @@ COUNTERPARTY_RECALCULATED_SHEET = "6_Контрагент пересчитанн
 def create_intermediate_table_3():
     workbook = load_workbook(INPUT_FILE)
     data_sheet = workbook[DATA_SHEET_NAME]
+
+    # Цвета
+    title_fill = PatternFill(
+        fill_type="solid",
+        fgColor="D9EAF7",
+    )
+
+    header_fill = PatternFill(
+        fill_type="solid",
+        fgColor="E2F0D9",
+    )
+
+    total_fill = PatternFill(
+        fill_type="solid",
+        fgColor="FFF2CC",
+    )
 
     rows = data_sheet.iter_rows(values_only=True)
     headers = list(next(rows))
@@ -174,10 +191,9 @@ def create_intermediate_table_3():
     ])
 
     for operation in operations:
-        # Основная строка зачёта
         result_sheet.append([
             operation["Номер"],
-            "ЗАЧЁТ",
+            "ОПЕРАЦИЯ ВЗАИМОЗАЧЁТА",
             operation["Контрагент"],
             operation["Вид зачёта"],
             operation["Схема"],
@@ -186,7 +202,6 @@ def create_intermediate_table_3():
             "",
         ])
 
-        # Информация по КЗ
         result_sheet.append([
             "",
             "КЗ",
@@ -204,7 +219,6 @@ def create_intermediate_table_3():
             operation["ID КЗ"],
         ])
 
-        # Информация по ДЗ
         result_sheet.append([
             "",
             "ДЗ",
@@ -225,7 +239,6 @@ def create_intermediate_table_3():
             operation["ID ДЗ"],
         ])
 
-        # Пустая строка между операциями
         result_sheet.append([None])
 
     result_sheet.append([
@@ -255,8 +268,6 @@ def create_intermediate_table_3():
     )
 
     final_sheet.append(headers)
-
-    # Закрепляем первую строку
     final_sheet.freeze_panes = "A2"
 
     for record in records:
@@ -278,7 +289,6 @@ def create_intermediate_table_3():
 
         final_sheet.append(final_row)
 
-    # Добавляем фильтр
     final_sheet.auto_filter.ref = (
         final_sheet.dimensions
     )
@@ -315,11 +325,41 @@ def create_intermediate_table_3():
     ]
 
     for subsidiary, subsidiary_records in grouped_by_do.items():
+        # Голубая строка с названием ДО
         do_sheet.append([
             f"ДО: {subsidiary}"
         ])
 
+        title_row = do_sheet.max_row
+
+        # Заливка без объединения ячеек
+        for column_number in range(
+            1,
+            len(do_headers) + 1,
+        ):
+            cell = do_sheet.cell(
+                row=title_row,
+                column=column_number,
+            )
+
+            cell.fill = title_fill
+
+        do_sheet.cell(
+            row=title_row,
+            column=1,
+        ).font = Font(
+            bold=True,
+            size=12,
+        )
+
+        # Зелёная строка заголовков
         do_sheet.append(do_headers)
+
+        header_row = do_sheet.max_row
+
+        for cell in do_sheet[header_row]:
+            cell.font = Font(bold=True)
+            cell.fill = header_fill
 
         total_receivable_before = 0
         total_payable_before = 0
@@ -393,6 +433,7 @@ def create_intermediate_table_3():
                 payable_after
             )
 
+        # Жёлтая итоговая строка
         do_sheet.append([
             "Итого по ДО",
             "",
@@ -404,6 +445,12 @@ def create_intermediate_table_3():
             total_payable_after,
             "",
         ])
+
+        total_row = do_sheet.max_row
+
+        for cell in do_sheet[total_row]:
+            cell.font = Font(bold=True)
+            cell.fill = total_fill
 
         do_sheet.append([None])
 
@@ -431,13 +478,43 @@ def create_intermediate_table_3():
     ]
 
     for counterparty, counterparty_records in grouped_by_counterparty.items():
+        # Голубая строка с названием контрагента
         counterparty_sheet.append([
             f"Контрагент: {counterparty}"
         ])
 
+        title_row = counterparty_sheet.max_row
+
+        # Заливка без объединения ячеек
+        for column_number in range(
+            1,
+            len(counterparty_headers) + 1,
+        ):
+            cell = counterparty_sheet.cell(
+                row=title_row,
+                column=column_number,
+            )
+
+            cell.fill = title_fill
+
+        counterparty_sheet.cell(
+            row=title_row,
+            column=1,
+        ).font = Font(
+            bold=True,
+            size=12,
+        )
+
+        # Зелёная строка заголовков
         counterparty_sheet.append(
             counterparty_headers
         )
+
+        header_row = counterparty_sheet.max_row
+
+        for cell in counterparty_sheet[header_row]:
+            cell.font = Font(bold=True)
+            cell.fill = header_fill
 
         total_receivable_before = 0
         total_payable_before = 0
@@ -488,6 +565,7 @@ def create_intermediate_table_3():
                 payable_after
             )
 
+        # Жёлтая итоговая строка
         counterparty_sheet.append([
             "Итого",
             "",
@@ -499,11 +577,16 @@ def create_intermediate_table_3():
             total_payable_after,
         ])
 
+        total_row = counterparty_sheet.max_row
+
+        for cell in counterparty_sheet[total_row]:
+            cell.font = Font(bold=True)
+            cell.fill = total_fill
+
         counterparty_sheet.append([None])
 
     # ---------------------------------------------------------
     # Автоматическая ширина столбцов
-    # на листах 3, 4, 5 и 6
     # ---------------------------------------------------------
 
     sheets_for_auto_width = [

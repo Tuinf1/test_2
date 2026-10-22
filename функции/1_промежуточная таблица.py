@@ -7,17 +7,8 @@ from openpyxl.styles import Font, PatternFill
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
-INPUT_FILE = (
-    PROJECT_DIR
-  
-    / "задолженность.xlsx"
-)
-
-OUTPUT_FILE = (
-    PROJECT_DIR
-
-    / "Промежуточная таблица 1.xlsx"
-)
+INPUT_FILE = PROJECT_DIR / "задолженность.xlsx"
+OUTPUT_FILE = PROJECT_DIR / "Промежуточная таблица 1.xlsx"
 
 DATA_SHEET_NAME = "Данные"
 SECOND_SHEET_NAME = "1_ДО"
@@ -44,13 +35,14 @@ def read_excel_data(workbook):
         )
 
     worksheet = workbook[DATA_SHEET_NAME]
-
     rows = worksheet.iter_rows(values_only=True)
 
     headers = next(rows, None)
 
     if headers is None:
-        raise ValueError("Лист с первичными данными пустой.")
+        raise ValueError(
+            "Лист с первичными данными пустой."
+        )
 
     headers = list(headers)
 
@@ -113,8 +105,7 @@ def add_second_intermediate_sheet(
     records,
 ):
     """
-    Добавляет в книгу лист
-    «Вторая промежуточная».
+    Добавляет лист «1_ДО».
     """
 
     if SECOND_SHEET_NAME in workbook.sheetnames:
@@ -122,6 +113,21 @@ def add_second_intermediate_sheet(
 
     worksheet = workbook.create_sheet(
         SECOND_SHEET_NAME
+    )
+
+    title_fill = PatternFill(
+        fill_type="solid",
+        fgColor="D9EAF7",
+    )
+
+    header_fill = PatternFill(
+        fill_type="solid",
+        fgColor="E2F0D9",
+    )
+
+    total_fill = PatternFill(
+        fill_type="solid",
+        fgColor="FFF2CC",
     )
 
     grouped_records = defaultdict(list)
@@ -143,19 +149,24 @@ def add_second_intermediate_sheet(
     current_row = 1
 
     for subsidiary, subsidiary_records in grouped_records.items():
-        # Название ДО
+        # Название ДО только в первой ячейке
         worksheet.cell(
             row=current_row,
             column=1,
             value=f"ДО: {subsidiary}",
         )
 
-        worksheet.merge_cells(
-            start_row=current_row,
-            start_column=1,
-            end_row=current_row,
-            end_column=len(headers),
-        )
+        # Красим строку без объединения ячеек
+        for column_number in range(
+            1,
+            len(headers) + 1,
+        ):
+            cell = worksheet.cell(
+                row=current_row,
+                column=column_number,
+            )
+
+            cell.fill = title_fill
 
         title_cell = worksheet.cell(
             row=current_row,
@@ -165,11 +176,6 @@ def add_second_intermediate_sheet(
         title_cell.font = Font(
             bold=True,
             size=12,
-        )
-
-        title_cell.fill = PatternFill(
-            fill_type="solid",
-            fgColor="D9EAF7",
         )
 
         current_row += 1
@@ -186,11 +192,7 @@ def add_second_intermediate_sheet(
             )
 
             cell.font = Font(bold=True)
-
-            cell.fill = PatternFill(
-                fill_type="solid",
-                fgColor="E2F0D9",
-            )
+            cell.fill = header_fill
 
         current_row += 1
 
@@ -199,8 +201,13 @@ def add_second_intermediate_sheet(
 
         # Все записи текущего ДО
         for record in subsidiary_records:
-            receivable = record["Сумма ДЗ"] or 0
-            payable = record["Сумма КЗ"] or 0
+            receivable = (
+                record["Сумма ДЗ"] or 0
+            )
+
+            payable = (
+                record["Сумма КЗ"] or 0
+            )
 
             values = [
                 record["ID"],
@@ -256,11 +263,7 @@ def add_second_intermediate_sheet(
             )
 
             cell.font = Font(bold=True)
-
-            cell.fill = PatternFill(
-                fill_type="solid",
-                fgColor="FFF2CC",
-            )
+            cell.fill = total_fill
 
         current_row += 2
 
@@ -275,7 +278,9 @@ def add_second_intermediate_sheet(
     }
 
     for column, width in column_widths.items():
-        worksheet.column_dimensions[column].width = width
+        worksheet.column_dimensions[
+            column
+        ].width = width
 
     return worksheet
 
@@ -286,11 +291,9 @@ def create_second_intermediate_file(
 ):
     """
     Открывает исходную книгу, сохраняет лист «Данные»,
-    добавляет второй лист и создаёт новый Excel-файл.
+    добавляет лист «1_ДО» и создаёт новый Excel-файл.
     """
 
-    # Открываем исходную книгу целиком.
-    # Поэтому лист «Данные» сохраняется.
     workbook = load_workbook(input_path)
 
     try:
@@ -306,7 +309,6 @@ def create_second_intermediate_file(
             exist_ok=True,
         )
 
-        # Сохраняем книгу под новым именем
         workbook.save(output_path)
 
     finally:
@@ -326,7 +328,7 @@ def main():
     print(f"Создан файл: {OUTPUT_FILE}")
     print("Листы в файле:")
     print("1. Данные")
-    print("2. Вторая промежуточная")
+    print("2. 1_ДО")
 
 
 if __name__ == "__main__":

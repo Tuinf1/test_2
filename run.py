@@ -9,7 +9,7 @@ FUNCTIONS_DIR = PROJECT_DIR / "функции"
 SCRIPTS = [
     FUNCTIONS_DIR / "1_промежуточная таблица.py",
     FUNCTIONS_DIR / "2_функция_2_вторая.py",
-    FUNCTIONS_DIR / "функция_3.py",
+    FUNCTIONS_DIR / "3_результат.py",
 ]
 
 
